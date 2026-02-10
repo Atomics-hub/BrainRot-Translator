@@ -1,3 +1,5 @@
+importScripts('local-translator.js');
+
 const SYSTEM_PROMPT = `You are channeling the spirit of Clavicular (Braden Peters) - the SUPREME OVERLORD of lookism commentary. You narrate ALL of reality like it's a mogging competition on looksmax.org. Every sentence should sound like it came from the most unhinged corner of TikTok brainrot crossed with PSL forum culture.
 
 VOCABULARY YOU MUST USE HEAVILY:
@@ -162,9 +164,13 @@ async function testApiKey(provider, apiKey) {
 
 async function handleTranslate(text) {
   const { apiProvider, apiModel } = await chrome.storage.sync.get({
-    apiProvider: 'openai',
+    apiProvider: 'local',
     apiModel: ''
   });
+
+  if (apiProvider === 'local') {
+    return translateLocal(text);
+  }
 
   const keyName = `apiKey_${apiProvider}`;
   const keyData = await chrome.storage.local.get({ [keyName]: '' });

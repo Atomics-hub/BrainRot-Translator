@@ -8,8 +8,11 @@ const testBtn = document.getElementById('testBtn');
 const statusEl = document.getElementById('status');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
+const modelSection = modelEl.closest('.section');
+const apiKeySection = apiKeyEl.closest('.section');
 
 const defaultModels = {
+  local: 'dictionary + rules',
   openai: 'gpt-4o-mini',
   anthropic: 'claude-haiku-4-5-20251001',
   groq: 'llama-3.3-70b-versatile'
@@ -34,27 +37,35 @@ const providerHints = {
 };
 
 async function updateProviderUI(provider) {
+  const isLocal = provider === 'local';
+
+  apiKeySection.style.display = isLocal ? 'none' : '';
+  testBtn.style.display = isLocal ? 'none' : '';
+  modelEl.disabled = isLocal;
   modelEl.placeholder = defaultModels[provider] || '';
-  modelEl.value = defaultModels[provider] || '';
-  apiKeyLabel.textContent = providerLabels[provider] || 'API Key';
-  apiKeyEl.placeholder = providerPlaceholders[provider] || '';
-  keyHint.innerHTML = providerHints[provider] || '';
+  modelEl.value = isLocal ? '' : (defaultModels[provider] || '');
 
-  const data = await chrome.storage.local.get({ [`apiKey_${provider}`]: '' });
-  apiKeyEl.value = data[`apiKey_${provider}`];
-
-  statusDot.className = 'status-dot';
-  statusText.textContent = 'not tested';
+  if (!isLocal) {
+    apiKeyLabel.textContent = providerLabels[provider] || 'API Key';
+    apiKeyEl.placeholder = providerPlaceholders[provider] || '';
+    keyHint.innerHTML = providerHints[provider] || '';
+    const data = await chrome.storage.local.get({ [`apiKey_${provider}`]: '' });
+    apiKeyEl.value = data[`apiKey_${provider}`];
+    statusDot.className = 'status-dot';
+    statusText.textContent = 'not tested';
+  }
 }
 
 (async () => {
   const items = await chrome.storage.sync.get({
-    apiProvider: 'openai',
+    apiProvider: 'local',
     apiModel: ''
   });
   providerEl.value = items.apiProvider;
-  modelEl.value = items.apiModel || defaultModels[items.apiProvider];
-  modelEl.placeholder = defaultModels[items.apiProvider];
+  if (items.apiProvider !== 'local') {
+    modelEl.value = items.apiModel || defaultModels[items.apiProvider];
+    modelEl.placeholder = defaultModels[items.apiProvider];
+  }
   await updateProviderUI(items.apiProvider);
 })();
 
@@ -66,19 +77,21 @@ saveBtn.addEventListener('click', async () => {
   const provider = providerEl.value;
   const key = apiKeyEl.value.trim();
 
-  if (key) {
-    const expectedPrefix = providerPlaceholders[provider].replace('...', '');
-    if (!key.startsWith(expectedPrefix)) {
-      statusEl.textContent = `key should start with ${expectedPrefix}`;
-      statusEl.style.color = '#ff4444';
-      return;
+  if (provider !== 'local') {
+    if (key) {
+      const expectedPrefix = providerPlaceholders[provider].replace('...', '');
+      if (!key.startsWith(expectedPrefix)) {
+        statusEl.textContent = `key should start with ${expectedPrefix}`;
+        statusEl.style.color = '#ff4444';
+        return;
+      }
     }
+    await chrome.storage.local.set({ [`apiKey_${provider}`]: key });
   }
 
-  await chrome.storage.local.set({ [`apiKey_${provider}`]: key });
   await chrome.storage.sync.set({
     apiProvider: provider,
-    apiModel: modelEl.value.trim()
+    apiModel: provider === 'local' ? '' : modelEl.value.trim()
   });
 
   statusEl.textContent = 'saved fr fr';

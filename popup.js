@@ -45,14 +45,16 @@ async function ensureContentScript(tabId) {
 toggleBtn.addEventListener('click', async () => {
   if (!currentTab || isToggling) return;
 
-  const { apiProvider } = await chrome.storage.sync.get({ apiProvider: 'openai' });
-  const keyName = `apiKey_${apiProvider}`;
-  const keyData = await chrome.storage.local.get({ [keyName]: '' });
+  const { apiProvider } = await chrome.storage.sync.get({ apiProvider: 'local' });
 
-  if (!keyData[keyName]) {
-    statusEl.textContent = `no ${apiProvider} key - check settings`;
-    statusEl.style.color = '#ff4444';
-    return;
+  if (apiProvider !== 'local') {
+    const keyName = `apiKey_${apiProvider}`;
+    const keyData = await chrome.storage.local.get({ [keyName]: '' });
+    if (!keyData[keyName]) {
+      statusEl.textContent = `no ${apiProvider} key - check settings`;
+      statusEl.style.color = '#ff4444';
+      return;
+    }
   }
 
   const wasActive = toggleBtn.classList.contains('on');
