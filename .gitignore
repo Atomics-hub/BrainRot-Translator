@@ -2,4 +2,8 @@
 *.zip
 *.pem
 *.crx
+*.key
+*.log
 node_modules/
+web-ext-artifacts/
+.env*
