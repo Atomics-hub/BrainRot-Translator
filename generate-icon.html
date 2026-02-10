@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<body style="background:#222;display:flex;flex-direction:column;align-items:center;padding:40px;font-family:monospace;color:#fff">
+  <canvas id="c" width="128" height="128"></canvas>
+  <br>
+  <a id="dl" download="store-icon-128.png" style="color:#ff00ff;font-size:18px;cursor:pointer">Download 128x128 PNG</a>
+  <script>
+    const c = document.getElementById('c');
+    const ctx = c.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, 128, 128, 20);
+    ctx.fill();
+
+    // Glow behind skull
+    const glow = ctx.createRadialGradient(64, 58, 10, 64, 58, 55);
+    glow.addColorStop(0, 'rgba(255, 0, 255, 0.35)');
+    glow.addColorStop(1, 'rgba(255, 0, 255, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 128, 128);
+
+    // Skull emoji
+    ctx.font = '62px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\u{1F480}', 64, 52);
+
+    // "BR" text
+    ctx.font = 'bold 28px Impact, Arial Black, sans-serif';
+    ctx.fillStyle = '#ff00ff';
+    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 12;
+    ctx.fillText('BR', 64, 104);
+
+    // Second pass for extra glow
+    ctx.shadowBlur = 24;
+    ctx.fillStyle = 'rgba(255, 0, 255, 0.5)';
+    ctx.fillText('BR', 64, 104);
+
+    // Download link
+    document.getElementById('dl').href = c.toDataURL('image/png');
+  </script>
+</body>
+</html>
